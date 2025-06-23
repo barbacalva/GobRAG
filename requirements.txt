@@ -1,0 +1,9 @@
+requests
+aiohttp
+transformers
+chromadb
+tqdm
+sentence-transformers
+torch
+openai
+python-dotenv
