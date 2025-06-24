@@ -7,3 +7,6 @@ sentence-transformers
 torch
 openai
 python-dotenv
+fastapi
+uvicorn
+pydantic

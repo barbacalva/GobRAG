@@ -44,6 +44,7 @@ import chromadb
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer
 
+from gobrag.embedding import discover_device
 
 CSV_FIELDNAMES: Final[list[str]] = [
     "id",
@@ -52,21 +53,6 @@ CSV_FIELDNAMES: Final[list[str]] = [
     "updated_at",
     "error",
 ]
-
-
-def discover_device(cli_device: str | None) -> str:
-    if cli_device:
-        return cli_device
-    try:
-        import torch  # noqa: F401
-
-        if torch.cuda.is_available():
-            return "cuda"
-        if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
-            return "mps"
-    except ImportError:
-        pass
-    return "cpu"
 
 
 def process_jsonl(
@@ -222,7 +208,7 @@ def main() -> None:
         format="%(levelname)s: %(message)s",
     )
 
-    device = discover_device(args.device)
+    device = args.device or discover_device()
     logging.info("Usando dispositivo: %s", device)
 
     model = SentenceTransformer(args.model, device=device, model_kwargs={"attn_implementation": "eager"})
