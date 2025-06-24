@@ -15,3 +15,14 @@ TOP_K = 4
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 JINA_API_KEY = os.getenv("JINA_API_KEY")
+
+
+def _parse_origins(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    return [o.strip() for o in raw.split(",") if o.strip()]
+
+
+CORS_ALLOW_ORIGINS: list[str] = _parse_origins(
+    os.getenv("CORS_ALLOW_ORIGINS", "")
+)

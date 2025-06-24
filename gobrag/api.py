@@ -3,13 +3,22 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 
-from gobrag.config import OPENAI_API_KEY, TOP_K
+from gobrag.config import OPENAI_API_KEY, TOP_K, CORS_ALLOW_ORIGINS
 from gobrag.rag_core import rag_stream
 
 app = FastAPI(title="GobRAG API", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,  # type: ignore[arg-type]
+    allow_origins=CORS_ALLOW_ORIGINS or ["*"],
+    allow_credentials=True,
+    allow_methods=["POST", "GET", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 
 class QueryIn(BaseModel):
