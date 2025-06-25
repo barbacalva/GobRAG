@@ -3,10 +3,10 @@ from typing import List, Dict, Tuple, AsyncIterator
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionChunk
 
-from gobrag.config import OPENAI_MODEL, TEMPERATURE, OPENAI_API_KEY
+from gobrag.config import settings
 from gobrag.vector_store import query_vector_store
 
-openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+openai_client = AsyncOpenAI(api_key=settings.openai_api_key.get_secret_value())
 
 
 def build_prompt(question: str, docs: list[str], metas: list[Dict]) -> str:
@@ -29,9 +29,9 @@ async def rag_stream(question: str, top_k: int) -> Tuple[AsyncIterator[ChatCompl
     )
     prompt = build_prompt(question, docs, metas)
     stream = await openai_client.chat.completions.create(
-        model=OPENAI_MODEL,
+        model=settings.openai_model,
         messages=[{"role": "user", "content": prompt}],
-        temperature=TEMPERATURE,
+        temperature=settings.temperature,
         stream=True,
     )
     return stream, metas

@@ -6,7 +6,9 @@ tqdm
 sentence-transformers
 torch
 openai
-python-dotenv
+pydantic-settings
+
+# API
 fastapi
 uvicorn
 pydantic

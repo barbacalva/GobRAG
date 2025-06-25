@@ -1,28 +1,28 @@
 from pathlib import Path
-from dotenv import load_dotenv
-import os
+from typing import List
 
-load_dotenv()
-
-DATA_DIR = Path("data")
-VECTOR_STORE_DIR = DATA_DIR / "vector_store"
-COLLECTION_NAME = "boe_es_v1"
-
-EMBED_MODEL = "jinaai/jina-embeddings-v2-base-es"
-OPENAI_MODEL = "gpt-3.5-turbo"
-TEMPERATURE = 0.2
-TOP_K = 4
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-JINA_API_KEY = os.getenv("JINA_API_KEY")
+from pydantic import AnyUrl, Field, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def _parse_origins(raw: str | None) -> list[str]:
-    if not raw:
-        return []
-    return [o.strip() for o in raw.split(",") if o.strip()]
+class Settings(BaseSettings):
+    embed_model: str = "jinaai/jina-embeddings-v2-base-es"
+    openai_model: str = "gpt-3.5-turbo"
+    temperature: float = 0.2
+    top_k: int = 4
+
+    vector_store_dir: Path = Path("data/vector_store")
+    collection_name: str = "boe_es_v1"
+
+    openai_api_key: SecretStr
+    jina_api_key: SecretStr | None = None
 
 
-CORS_ALLOW_ORIGINS: list[str] = _parse_origins(
-    os.getenv("CORS_ALLOW_ORIGINS", "")
-)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_prefix="GOBRAG_",
+        case_sensitive=False,
+    )
+
+
+settings = Settings()

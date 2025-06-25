@@ -22,16 +22,14 @@ $ python -m gobrag.cli \
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 import textwrap
 
 import chromadb
-from dotenv import load_dotenv
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer
 
-from gobrag.config import VECTOR_STORE_DIR, COLLECTION_NAME, EMBED_MODEL, TOP_K, OPENAI_MODEL
+from gobrag.config import settings
 from gobrag.embedding import discover_device, embed
 from gobrag.rag_core import build_prompt
 
@@ -45,20 +43,20 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("question", nargs="+", help="Pregunta en lenguaje natural")
     ap.add_argument(
         "--store",
-        default=str(VECTOR_STORE_DIR),
-        help=f"Ruta a la base Chroma (defecto: {VECTOR_STORE_DIR})",
+        default=str(settings.vector_store_dir),
+        help=f"Ruta a la base Chroma (defecto: {settings.vector_store_dir})",
     )
     ap.add_argument(
         "--collection",
-        default=COLLECTION_NAME,
-        help=f"Nombre de la colección Chroma (defecto: {COLLECTION_NAME})",
+        default=settings.collection_name,
+        help=f"Nombre de la colección Chroma (defecto: {settings.collection_name})",
     )
     ap.add_argument(
         "--model",
-        default=EMBED_MODEL,
-        help=f"Modelo HF para embeddings (defecto: {EMBED_MODEL})",
+        default=settings.embed_model,
+        help=f"Modelo HF para embeddings (defecto: {settings.embed_model})",
     )
-    ap.add_argument("--top-k", type=int, default=TOP_K, help="Vecinos más cercanos")
+    ap.add_argument("--top-k", type=int, default=settings.top_k, help="Vecinos más cercanos")
     ap.add_argument(
         "--device",
         default=None,
@@ -95,15 +93,14 @@ def main() -> None:
 
     prompt = build_prompt(question, docs, metas)
 
-    load_dotenv()
-    openai_key = os.getenv("OPENAI_API_KEY")
+    openai_key = settings.openai_api_key.get_secret_value()
     if not openai_key:
         sys.exit("ERROR: define OPENAI_API_KEY en el entorno.")
 
     llm = OpenAI(api_key=openai_key)
     print("💬  Consultando ChatGPT …", file=sys.stderr)
     completion = llm.chat.completions.create(
-        model=OPENAI_MODEL,
+        model=settings.openai_model,
         messages=[{"role": "user", "content": prompt}],
         temperature=args.temperature,
     )

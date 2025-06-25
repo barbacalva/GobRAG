@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from sentence_transformers import SentenceTransformer
 
-from gobrag.config import EMBED_MODEL
+from gobrag.config import settings
 
 
 def discover_device() -> str:
@@ -22,7 +22,7 @@ def discover_device() -> str:
 @lru_cache(maxsize=1)
 def get_embedder() -> SentenceTransformer:
     return SentenceTransformer(
-        EMBED_MODEL,
+        settings.embed_model,
         device=discover_device()
     )
 

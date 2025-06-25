@@ -10,10 +10,11 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from gobrag.config import OPENAI_API_KEY, TOP_K, CORS_ALLOW_ORIGINS
+from gobrag.config import settings
 from gobrag.embedding import get_embedder
 from gobrag.rag_core import rag_stream
 from gobrag.vector_store import get_collection
+
 
 app = FastAPI(title="GobRAG API", version="0.1.0")
 
@@ -28,7 +29,7 @@ app.add_middleware(
 
 class QueryIn(BaseModel):
     question: str
-    top_k: int | None = TOP_K
+    top_k: int | None = settings.top_k
 
 
 @app.get("/health", tags=["health"], response_class=JSONResponse)
@@ -54,9 +55,9 @@ async def readiness():
         checks["chroma"] = str(e)
 
     try:
-        if not OPENAI_API_KEY:
+        if not settings.openai_api_key:
             raise RuntimeError("OPENAI_API_KEY undefined")
-        client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+        client = AsyncOpenAI(api_key=settings.openai_api_key.get_secret_value())
         await asyncio.wait_for(client.models.list(), timeout=2.0)
         checks["openai"] = "ok"
     except Exception as e:
@@ -69,10 +70,7 @@ async def readiness():
 
 @app.post("/ask")
 async def ask(in_payload: QueryIn):
-    if not OPENAI_API_KEY:
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY no definido")
-
-    stream, metas = await rag_stream(in_payload.question, in_payload.top_k)
+    stream, _ = await rag_stream(in_payload.question, in_payload.top_k)
 
     async def generator():
         async for chunk in stream:

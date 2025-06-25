@@ -2,14 +2,14 @@ from functools import lru_cache
 
 import chromadb
 
-from gobrag.config import VECTOR_STORE_DIR, COLLECTION_NAME
+from gobrag.config import settings
 from gobrag.embedding import embed
 
 
 @lru_cache(maxsize=1)
 def get_collection():
-    client = chromadb.PersistentClient(path=str(VECTOR_STORE_DIR))
-    return client.get_collection(COLLECTION_NAME)
+    client = chromadb.PersistentClient(path=str(settings.vector_store_dir))
+    return client.get_collection(settings.collection_name)
 
 
 def query_vector_store(question: str, top_k: int):
