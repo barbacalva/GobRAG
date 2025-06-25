@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
+from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 from gobrag.config import OPENAI_API_KEY, TOP_K, CORS_ALLOW_ORIGINS
+from gobrag.embedding import get_embedder
 from gobrag.rag_core import rag_stream
+from gobrag.vector_store import get_collection
 
 app = FastAPI(title="GobRAG API", version="0.1.0")
 
@@ -26,9 +31,40 @@ class QueryIn(BaseModel):
     top_k: int | None = TOP_K
 
 
-@app.get("/health", response_class=JSONResponse)
+@app.get("/health", tags=["health"], response_class=JSONResponse)
 def health():
     return {"status": "ok"}
+
+
+@app.get("/ready", tags=["health"])
+async def readiness():
+    checks = {}
+
+    try:
+        _ = get_embedder()
+        checks["embedder"] = "ok"
+    except Exception as e:
+        checks["embedder"] = str(e)
+
+    try:
+        col = get_collection()
+        _ = col.count()
+        checks["chroma"] = "ok"
+    except Exception as e:
+        checks["chroma"] = str(e)
+
+    try:
+        if not OPENAI_API_KEY:
+            raise RuntimeError("OPENAI_API_KEY undefined")
+        client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+        await asyncio.wait_for(client.models.list(), timeout=2.0)
+        checks["openai"] = "ok"
+    except Exception as e:
+        checks["openai"] = str(e)
+
+    if all(v == "ok" for v in checks.values()):
+        return checks
+    return JSONResponse(status_code=503, content=checks)
 
 
 @app.post("/ask")
