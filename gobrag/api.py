@@ -4,27 +4,20 @@ from __future__ import annotations
 
 import asyncio
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 from gobrag.config import settings
 from gobrag.embedding import get_embedder
+from gobrag.middlewares import attach_middlewares
 from gobrag.rag_core import rag_stream
 from gobrag.vector_store import get_collection
 
 
 app = FastAPI(title="GobRAG API", version="0.1.0")
-
-app.add_middleware(
-    CORSMiddleware,  # type: ignore[arg-type]
-    allow_origins=CORS_ALLOW_ORIGINS or ["*"],
-    allow_credentials=True,
-    allow_methods=["POST", "GET", "OPTIONS"],
-    allow_headers=["*"],
-)
+attach_middlewares(app)
 
 
 class QueryIn(BaseModel):

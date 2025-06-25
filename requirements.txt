@@ -12,3 +12,4 @@ pydantic-settings
 fastapi
 uvicorn
 pydantic
+slowapi

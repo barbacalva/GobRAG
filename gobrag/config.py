@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr
     jina_api_key: SecretStr | None = None
 
+    cors_allow_origins: List[str | AnyUrl] = Field(default_factory=lambda: ["*"])
+    api_keys: List[str] = Field(default_factory=lambda: ["demo123"])
+    rate_limit: str = "3/minute"
 
     model_config = SettingsConfigDict(
         env_file=".env",
