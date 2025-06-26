@@ -13,3 +13,6 @@ fastapi
 uvicorn
 pydantic
 slowapi
+
+# Frontend
+streamlit
